@@ -84,6 +84,7 @@ db.getSiblingDB('pacman').init.insert({name: "init"});'> /home/ec2-user/docker-p
 
 chown -R ec2-user:ec2-user /home/ec2-user/docker-pacman
 systemctl start docker.service
+systemctl enable docker.service
 su - ec2-user
 sudo -u ec2-user docker network create pacman-network
 sudo -u ec2-user docker-compose -f /home/ec2-user/docker-pacman/docker-compose-pacman-mongo.yaml up
