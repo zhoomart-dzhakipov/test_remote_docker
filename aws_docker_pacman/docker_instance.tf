@@ -27,7 +27,11 @@ yum -y install docker
 curl -L https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m) -o /usr/local/bin/docker-compose
 chmod +x /usr/local/bin/docker-compose
 sudo usermod -aG docker ec2-user
-echo 'services:
+mkdir /home/ec2-user/docker-pacman
+mkdir /home/ec2-user/docker-pacman/mongo-init-db
+echo '# Убедитесь, что используете правильную версию
+
+services:
   nodejs-app:
     image: jessehoch/pacman-nodejs-app:latest
     ports:
@@ -40,13 +44,14 @@ echo 'services:
     restart: unless-stopped
 
   mongo:
-   image: mongo:4.0.4
-   ports:
-     - "27017:27017" # Expose MongoDB on port 27017
-   volumes:
-     - mongo-db:/data/db
-     - ./mongo-init-db/init_user_db.js:/docker-entrypoint-initdb.d/init_user_db.js:ro  # Mount the initialization script directory
-   restart: unless-stopped
+    image: mongo:4.0.4
+    ports:
+      - "27017:27017" # Expose MongoDB on port 27017
+    volumes:
+      - mongo-db:/data/db
+      - ./mongo-init-db/init_user_db.js:/docker-entrypoint-initdb.d/init_user_db.js:ro  # Mount the initialization script directory
+    restart: unless-stopped
+
 volumes:
   mongo-db:
     driver: local
@@ -54,16 +59,34 @@ volumes:
     driver: local
     driver_opts:
       type: none
-      device: $PWD/mongo-init-db # need folder mongo-init-db in the same folder as docker-compose.yml
+      device: $PWD/mongo-init-db # Use absolute path for device
       o: bind
+
 networks:
   default:
     external:
-      name: pacman-network
-    restart: always                           # Перезапускает контейнер в случае сбоя' > /home/ec2-user/docker-pacman/docker-compose-pacman-mongo.yaml
-chown -R ec2-user:ec2-user /home/ec2-user/docker-nginx
+      name: pacman-network' > /home/ec2-user/docker-pacman/docker-compose-pacman-mongo.yaml
+echo '// init-mongo.js
+db.getSiblingDB('admin').createUser({
+    user: "admin",
+    pwd: "adminPassword",  // Replace with a secure password
+    roles: [{ role: "userAdminAnyDatabase", db: "admin" }]
+});
+
+db.getSiblingDB('pacman').createUser({
+    user: "pacman",
+    pwd: "pacman",  // Replace with a secure password
+    roles: [{ role: "readWrite", db: "pacman" }]
+});
+
+db.getSiblingDB('pacman').createCollection("init");
+db.getSiblingDB('pacman').init.insert({name: "init"});'> /home/ec2-user/docker-pacman/mongo-init-db/init_user_db.js
+
+chown -R ec2-user:ec2-user /home/ec2-user/docker-pacman
 systemctl start docker.service
-sudo -u ec2-user docker-compose -f /home/ec2-user/docker-nginx/docker-compose.yml up
+su - ec2-user
+sudo -u ec2-user docker network create pacman-network
+sudo -u ec2-user docker-compose -f /home/ec2-user/docker-pacman/docker-compose-pacman-mongo.yaml up
 
 
 
