@@ -118,6 +118,6 @@ resource "aws_security_group" "default_sec_group" {
 }
 
 output "instance_public_ip" {
-  value = aws_instance.My_web.public_ip
+  value = aws_instance.pacman_on_docker.public_ip
 }
 
