@@ -1,7 +1,7 @@
 /* 
  Zhoomart
- July 2024
- Uploading My-web service
+ August 2024
+ Uploading pacman on docker AWS
 */
 
 
@@ -9,15 +9,15 @@ provider "aws" {
   region = "us-east-1"
 }
 
-resource "aws_instance" "My_web" {
+resource "aws_instance" "pacman_on_docker" {
   # ami                    = "ami-0583d8c7a9c35822c"
   ami           = "ami-0b72821e2f351e396" #Amazon Linux 2023 AMI (64-bit (x86), uefi-preferred)
   instance_type = "t2.micro"              #i386, x86_64, CPU*1, RAM*1Gb
   #instance_type          = "t2.large" #x86_64, CPU*2, RAM*8
   vpc_security_group_ids = [aws_security_group.default_sec_group.id]
-  key_name               = "My_web"
+  key_name               = "test2"
   tags = {
-    Name  = "My_web"
+    Name  = "pacman_on_docker"
     Owner = "Jomart"
   }
   user_data = <<EOF
@@ -74,8 +74,8 @@ EOF
 }
 
 resource "aws_security_group" "default_sec_group" {
-  name        = "Sec_group_My_web"
-  description = "Security group for My_web"
+  name        = "Sec_group_pacman"
+  description = "Security group for docker pacman"
 
   # Creates ingress rules for TCP ports 22, 80, and 443.
   /* dynamic "ingress" {
@@ -113,7 +113,7 @@ resource "aws_security_group" "default_sec_group" {
   }
 
   tags = {
-    Name = "Security group for Doser"
+    Name = "Security group for pacman"
   }
 }
 
